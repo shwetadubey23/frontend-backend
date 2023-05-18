@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
 })
 const userInfo = mongoose.model("User", userSchema)
 
+
 const isAuthenticated = async (req, res, next) => {
   const { token } = req.cookies
   if (token) {
@@ -63,13 +64,14 @@ app.get("/register", (req, res) => {
 app.post('/register', async (req, res) => {
   // console.log(req.user);
   const { name, email, password } = req.body
-  let user = await  userInfo.findOne({ email })
+  let user = await userInfo.findOne({ email })
   if (user) {
-   return res.send({message: "This email Id have already registered"})
-    // return res.redirect("/login");
+    return res.redirect("/login");
   }
+const hashedPassword = await bcrypt.hash(password, 10)
 
-  user = await userInfo.create({ name, email, password })
+  user = await userInfo.create({ name, email, password: hashedPassword})
+  
   const token = jwt.sign({ _id: user._id }, "wenhuebfrunsd")
   res.cookie("token", token, {
     httpOnly: true, expries: new Date(Date.now() + 60 * 10000)
@@ -84,15 +86,15 @@ app.post('/login', async (req, res) => {
   if (!userExist) {
     return res.redirect("/register")
   }
-  const isMatchUser = userExist.password === password
+  const isMatchUser = await bcrypt.compare(password, userExist.password)
 
   if (!isMatchUser) {
-    return res.render("login", { email, message: "Incorrect User or Password" })
+    return res.render("login", { email, message: "Incorrect Password" })
   }
   const token = jwt.sign({ _id: userExist._id }, "wenhuebfrunsd")
 
   res.cookie("token", token, {
-    httpOnly: true, 
+    httpOnly: true,
     expires: new Date(Date.now() + 60 * 1000)
   })
   res.redirect("/Home")
