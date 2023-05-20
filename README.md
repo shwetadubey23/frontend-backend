@@ -1,3 +1,3 @@
-# Login-logout page with frontend-backend
+# Login-logout page
 
-# in this project I work on both tech stack (Frontend - Backend)
+
